@@ -1,5 +1,6 @@
 [web_servers]
 andy-ubuntu-ws
+fedora
 
 [db_servers]
 fedora

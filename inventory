@@ -1,2 +1,7 @@
-andy-ubuntu-ws apache_package=apache2 php_package=libapache2-mod-php
-fedora apache_package=httpd php_package=php
+[web_servers]
+andy-ubuntu-ws
+
+[db_servers]
+fedora
+
+

@@ -1,5 +1,5 @@
 ---
-- hosts: andy-ubuntu-ws
+- hosts: all
   become: true
   tasks: 
 
@@ -19,3 +19,21 @@
       name: libapache2-mod-php 
       state: latest
     when: ansible_distribution == "Ubuntu"
+
+
+  - name: update repository index
+    ansible.builtin.dnf:
+      update_cache: yes
+    when: ansible_distribution == "Fedora"
+ 
+  - name: install apache2 package
+    ansible.builtin.dnf:
+      name: httpd 
+      state: latest
+    when: ansible_distribution == "Fedora"
+
+  - name: install suport for php
+    ansible.builtin.dnf:
+      name: php 
+      state: latest
+    when: ansible_distribution == "Fedora"

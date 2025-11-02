@@ -17,6 +17,27 @@
       update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
+  - name: create user
+    tags: always
+    ansible.builtin.user:
+      name: sophie
+      groups: root
+
+  - name: add sudoers file for sophie
+    tags: always
+    ansible.builtin.copy:
+      src: sudoer_sophie
+      dest: /etc/sudoers.d/sophie
+      owner: root
+      group: root
+      mode: 0440
+
+  - name: add ssh key for sophie user
+    tags: always
+    ansible.builtin.authorized_key:
+      user: sophie
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE8jtXR7y9wGUFJI5Javmk4+JBcaD8tL7cG79IO28n+a andy@andy-proxmox-ubuntu"
+
 - hosts: web_servers
   become: true
   tasks:

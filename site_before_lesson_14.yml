@@ -1,0 +1,112 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates for fedora
+    tags: always
+    ansible.builtin.dnf:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution == "Fedora"
+
+  - name: install updates for ubuntu
+    tags: always
+    ansible.builtin.apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: create user
+    tags: always
+    ansible.builtin.user:
+      name: sophie
+      groups: root
+
+  - name: add sudoers file for sophie
+    tags: always
+    ansible.builtin.copy:
+      src: sudoer_sophie
+      dest: /etc/sudoers.d/sophie
+      owner: root
+      group: root
+      mode: 0440
+
+  - name: add ssh key for sophie user
+    tags: always
+    ansible.builtin.authorized_key:
+      user: sophie
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE8jtXR7y9wGUFJI5Javmk4+JBcaD8tL7cG79IO28n+a andy@andy-proxmox-ubuntu"
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+  - name: install apache on UBUNTU web servers
+    tags: apache,ubuntu
+    ansible.builtin.apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install apache on Fedora web servers
+    tags: apache,fedora
+    ansible.builtin.dnf:
+      name:
+        - httpd
+        - php
+      state: latest
+    when: ansible_distribution == "Fedora"
+
+  - name: ensure apache is running on Ubuntu
+    tags: apache,ubuntu
+    ansible.builtin.service:
+      name: apache2
+      state: started
+    when: ansible_distribution == "Ubuntu"
+
+  - name: ensure apache is running on Fedora
+    tags: apache,fedora
+    ansible.builtin.service:
+      name: httpd
+      state: started
+    when: ansible_distribution == "Fedora"
+
+  - name: change email address for admin in httpd.conf
+    tags: apache,fedora
+    ansible.builtin.lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin irgendwer@irgendwo.org
+    when: ansible_distribution == "Fedora"
+    register: httpd
+
+  - name:
+    tags: apache,fedora
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
+  - name: copy html file
+    tags: apache,ubuntu
+    ansible.builtin.copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+  - name: install mariadb on db servers
+    tags: db,fedora
+    ansible.builtin.dnf:
+      name: mariadb
+      state: latest
+    when: ansible_distribution == "Fedora"
+
